@@ -1,2 +1,2 @@
-# webfront
-新的前台积累处理，旧的webfrontend太大，放弃维护
+# webfrontend
+web前端开发的示例，测试代码。

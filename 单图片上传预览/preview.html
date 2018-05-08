@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+	 <title>支持图片上传预览的uploadPreview.js插件</title>
+	 <script src="jquery-1.11.3.min.js"></script>
+	 <script src="uploadPreview.js"></script>
+	 <script type='text/javascript'>
+	 $(function(){
+		new uploadPreview({  
+		   UpBtn: "up_img",  
+		   DivShow: "imgdiv",  
+		   ImgShow: "imgShow",  
+		   callback: function(){  
+			//this 代表配置对象  
+			//console.dir(this);  
+			//用时间戳作为唯一标示  
+			//var timeStamp = new Date().getTime();  
+			//模板就是HTML页面中的代码，如上面的代码部分  
+			//var containerTemplate = '<div id="imgdiv'+timeStamp+'"class="float_left width_33"><img id="imgShow'+timeStamp+'"width="120"height="120"/><input type="file"id="up_img'+timeStamp+'"/></div>';  
+			//将代码动态的添加到HTML中，这样可以实现动态添加预览input控件  
+			$("#"+this.DivShow).after(containerTemplate);  
+			//var targetSetting = {  
+			//		 UpBtn: "up_img"+timeStamp,  
+			//		 DivShow: "imgdiv"+timeStamp,  
+			////		 ImgShow: "imgShow"+timeStamp,  
+			//		 callback:this.callback  
+			//	  };  
+			//配置文件使用递归的方式来处理  
+			//new uploadPreview(targetSetting);  
+		   }  
+		}); 
+	});
+ 	 
+	 </script>
+ </head>
+ <body>
+	<div class="uploadPreviewContainer">  
+		<div id="imgdiv" class="float_left width_33">  
+			<img id="imgShow" width="120" height="120" />  
+			<input type="file" id="up_img" multiple="multiple"  />  
+		</div>  
+		<div class="clear_both"></div>  
+	</div>  
+ </body>
+ </html>

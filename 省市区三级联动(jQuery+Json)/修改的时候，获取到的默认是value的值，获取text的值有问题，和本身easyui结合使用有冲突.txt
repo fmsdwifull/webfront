@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>客户管理</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugin/jquery-easyui-1.4.4/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="__PUBLIC__/plugin/jquery-easyui-1.4.4/themes/icon.css">
+        <link rel="stylesheet" type="text/css" href="__PUBLIC__/plugin/jquery-easyui-1.4.4/themes/color.css">
+	<script type="text/javascript" src="__PUBLIC__/plugin/jquery-easyui-1.4.4/jquery.min.js"></script>
+	<script type="text/javascript" src="__PUBLIC__/plugin/jquery-easyui-1.4.4/jquery.easyui.min.js"></script>
+        <script type="text/javascript" src="__PUBLIC__/plugin/jquery-easyui-1.4.4/locale/easyui-lang-zh_CN.js"></script>
+        <script type="text/javascript" src="__PUBLIC__/shop4s/js/common.js"></script>
+        <script type="text/javascript" src="__PUBLIC__/shop4s/js/china_area.js"></script>
+        
+        <script type="text/javascript">
+            $(function()
+            {
+                $('#newcustomerd').dialog({ closed:true });// 
+                $('#editcustomerd').dialog({ closed:true });// 
+                var pager = $('#customerDlg').datagrid().datagrid('getPager');	// get the pager of datagrid
+                pager.pagination({                     
+                    beforePageText: '第',//页数文本框前显示的汉字 
+                    afterPageText: '页    共 {pages} 页', 
+                    displayMsg: '当前显示 {from} - {to} 条记录   共 {total} 条记录', 
+                });
+                loadProviceCityCountryForEdit();
+            });
+            
+            //省城市区县三级联动
+            function loadProviceCityCountryForNew()
+            {
+                $.each(provinceJson, function(k, p) {
+                    var option = "<option value='" + p.id + "'>" + p.province + "</option>";
+                    $("#newcustomerd").find('#stcm_client_provice').append(option);
+                });
+                $("#newcustomerd").find('#stcm_client_provice').change(function() {
+                    var selValue = $(this).val();
+                    $("#newcustomerd").find("#stcm_client_city option:gt(0)").remove();
+                    $.each(cityJson, function(k, p) {
+                        // 直辖市处理.|| p.parent == selValue，直辖市为当前自己
+                        if (p.id == selValue || p.parent == selValue) {
+                            var option = "<option value='" + p.id + "'>" + p.city + "</option>";
+                            $("#newcustomerd").find('#stcm_client_city').append(option);
+                        }
+                    });
+                }); 
+                $("#newcustomerd").find("#stcm_client_city").change(function() {
+                    var selValue = $(this).val();
+                    $("#newcustomerd").find("#stcm_client_county option:gt(0)").remove();
+                    $.each(countyJson, function(k, p) {
+                        if (p.parent == selValue) {
+                            var option = "<option value='" + p.id + "'>" + p.county + "</option>";
+                            $("#newcustomerd").find("#stcm_client_county").append(option);
+                        }
+                    });
+                });              
+            }
+            function loadProviceCityCountryForEdit()
+            {
+                $.each(provinceJson, function(k, p) {
+                    var option = "<option value='" + p.id + "'>" + p.province + "</option>";
+                    $("#editcustomerd").find('#stcm_client_provice').append(option);
+                });
+                $("#editcustomerd").find('#stcm_client_provice').change(function() {
+                    var selValue = $(this).val();
+                    $("#editcustomerd").find("#stcm_client_city option:gt(0)").remove();
+                    $.each(cityJson, function(k, p) {
+                        // 直辖市处理.|| p.parent == selValue，直辖市为当前自己
+                        if (p.id == selValue || p.parent == selValue) {
+                            var option = "<option value='" + p.id + "'>" + p.city + "</option>";
+                            $("#editcustomerd").find('#stcm_client_city').append(option);
+                        }
+                    });
+                }); 
+                $("#editcustomerd").find("#stcm_client_city").change(function() {
+                    var selValue = $(this).val();
+                    $("#editcustomerd").find("#stcm_client_county option:gt(0)").remove();
+                    $.each(countyJson, function(k, p) {
+                        if (p.parent == selValue) {
+                            var option = "<option value='" + p.id + "'>" + p.county + "</option>";
+                            $("#editcustomerd").find("#stcm_client_county").append(option);
+                        }
+                    });
+                });              
+            }
+            
+            function newCustomer()
+            {       
+                $('#newcustomerd').dialog({
+                    title: '客户车辆信息编辑',
+                    modal: true
+                });
+                $('#newcustomerd').dialog('open');      
+                $('#newcustomerf').form('clear');
+                
+                //加载地域联动
+                loadProviceCityCountryForNew();
+            }
+            
+            function compareDate(date1,date2)
+            {
+                //console.info(date1);
+                //console.info(date2);
+                var oDate1 = new Date(date1);
+                var oDate2 = new Date(date2);
+                if(oDate1.getTime() > oDate2.getTime()){
+                    return 0;
+                } else {
+                    return -1;;
+                }
+            }
+            
+            function submitNewCustomerForm()
+            {
+                //日期判断
+                $('#newcustomerf').form('submit', {    
+                    url:'__APP__/Shop4S/Jobs/newCar',  
+                    onSubmit: function(){  
+                        return $(this).form('validate'); 
+                    },    
+                    success:function(data){    
+                        if(data==-1)
+                        {
+                            alert("创建新车辆失败！");
+                        }else{
+                            alert(data);
+                        }
+                    }    
+                }); 
+            }
+            function clearNewCustomerForm()
+            {
+                $('#newcustomerd').dialog('close');                
+            }
+            function editCustomer()
+            {
+                $('#editcustomerd').dialog({
+                    title: '客户车辆信息编辑',
+                    modal: true
+                });
+                var row = $('#customerDlg').datagrid('getChecked');
+                if(row.length!=1)
+                {
+                    alert("请选一项进行操作！");
+                    return  false;
+                }
+                $('#editcustomerf').form('clear');//
+                //这里不得不改成ajax方式处理
+                //$('#editcustomerf').form('load','getCustomerrById?stcm_carid='+row[0].stcm_carid);    
+                $.ajax({
+                    url:'getCustomerrById?stcm_carid='+row[0].stcm_carid,
+                    type:'get',
+                    dataType:'json',
+                    async:true,
+                    success:function(data){
+                        $("#editcustomerd").find('#stcm_car_owner').textbox('setValue',data.stcm_car_owner);
+                        $("#editcustomerd").find('#stcm_client_sex').textbox('setValue',data.stcm_client_sex);
+                        $("#editcustomerd").find('#stcm_client_zjtype').textbox('setValue',data.stcm_client_zjtype);
+                        $("#editcustomerd").find('#stcm_client_id').textbox('setValue',data.stcm_client_id);
+                        $("#editcustomerd").find('#stcm_client_cellphone').textbox('setValue',data.stcm_client_cellphone);
+                        $("#editcustomerd").find('#stcm_client_tel').textbox('setValue',data.stcm_client_tel);
+                        $("#editcustomerd").find('#stcm_client_type').textbox('setValue',data.stcm_client_type);
+                        $("#editcustomerd").find('#stcm_client_class').textbox('setValue',data.stcm_client_class);
+                        if(data.stcm_client_provice!=null)
+                            $("#editcustomerd").find('#stcm_client_provice').prepend('<option value="1" selected="selected">'+data.stcm_client_provice+'</option>');
+                        if(data.stcm_client_city!=null)
+                            $("#editcustomerd").find('#stcm_client_city').prepend('<option value="1" selected="selected">'+data.stcm_client_city+'</option>');
+                        if(data.stcm_client_county!=null)
+                            $("#editcustomerd").find('#stcm_client_county').prepend('<option value="1" selected="selected">'+data.stcm_client_county+'</option>');       
+                        $("#editcustomerd").find('#stcm_client_addr').textbox('setValue',data.stcm_client_addr);
+                        $("#editcustomerd").find('#stcm_drivelicence_expiration').textbox('setValue',data.stcm_drivelicence_expiration);
+                        $("#editcustomerd").find('#stcm_contact_person').textbox('setValue',data.stcm_contact_person);
+                        $("#editcustomerd").find('#stcm_contact_cellphone').textbox('setValue',data.stcm_contact_cellphone);
+                        $("#editcustomerd").find('#stcm_car_license').textbox('setValue',data.stcm_car_license);
+                        $("#editcustomerd").find('#stcm_car_vin').textbox('setValue',data.stcm_car_vin);
+                        $("#editcustomerd").find('#stcm_car_dianjicode').textbox('setValue',data.stcm_car_dianjicode);
+                        $("#editcustomerd").find('#stcm_batery_code').textbox('setValue',data.stcm_batery_code);
+                        $("#editcustomerd").find('#stcm_car_chexi').textbox('setValue',data.stcm_car_chexi);
+                        $("#editcustomerd").find('#stcm_car_xinghao').textbox('setValue',data.stcm_car_xinghao);
+                        $("#editcustomerd").find('#stcm_car_color').textbox('setValue',data.stcm_car_color);
+                        $("#editcustomerd").find('#stcm_batery_producer').textbox('setValue',data.stcm_batery_producer);
+                        $("#editcustomerd").find('#stcm_car_class').textbox('setValue',data.stcm_car_class);
+                        $("#editcustomerd").find('#stcm_car_state').textbox('setValue',data.stcm_car_state);
+                        $("#editcustomerd").find('#stcm_carproduce_date').datebox('setValue',data.stcm_carproduce_date);
+                        $("#editcustomerd").find('#stcm_carkaipiao_date').datebox('setValue',data.stcm_carkaipiao_date);
+                        $("#editcustomerd").find('#stcm_carbaoxiustart_date').datebox('setValue',data.stcm_carbaoxiustart_date);
+                        
+                        $("#editcustomerd").find('#stcm_carsale_date').datebox('setValue',data.stcm_carsale_date);
+                        $("#editcustomerd").find('#stcm_carfirstmaintain_date').datebox('setValue',data.stcm_carfirstmaintain_date);
+                        $("#editcustomerd").find('#stcm_nearcome_date').datebox('setValue',data.stcm_nearcome_date);
+                        $("#editcustomerd").find('#stcm_nearcome_mileage').numberbox('setValue',data.stcm_nearcome_mileage);
+                        $("#editcustomerd").find('#stcm_nearmaintain_date').datebox('setValue',data.stcm_nearmaintain_date);
+                        $("#editcustomerd").find('#stcm_nearmaintain_mileage').numberbox('setValue',data.stcm_nearmaintain_mileage);
+                        $("#editcustomerd").find('#stcm_nearcps_date').datebox('setValue',data.stcm_nearcps_date);
+                        $("#editcustomerd").find('#stcm_nearcps_mileage').numberbox('setValue',data.stcm_nearcps_mileage);
+                        //alert(data.stcm_car_owner);
+                        ///console.info(data);
+                        //$('#editcustomerf').form('load','getCustomerrById?stcm_carid='+row[0].stcm_carid);
+
+                    },
+                    error:function(msg){
+                        
+                    }
+                });
+                $('#editcustomerd').dialog('open');
+
+                //给三个地域选择框赋值，这里有点特殊处理
+            }
+            
+            function delCustomer()
+            {
+                var delrows = $('#customerDlg').datagrid('getChecked');
+                if(delrows.length>0)
+                {
+                    $.ajax({
+                       url:"delLocalCars",
+                       type:"post",
+                       data:{"deldata":JSON.stringify(delrows)},
+                       success:function(msg){
+                           alert(msg);
+                           if(msg=="有维修工单，车辆信息不能删除！")
+                           {
+                               return false; 
+                           }    
+                           $('#customerDlg').datagrid({
+                                    url:'getCarDb',
+                           });
+                        },
+                        error:function(){
+                           alert("删除车辆有误，请检查！");
+                        }
+                    });
+
+                }else{
+                    alert("请选择要删除的车辆");
+                } 
+            }
+            function getSearchData()
+            {
+                //if($('#carOptSearch').combobox('getValue')=="all")
+                //    $('#carInpSearch').textbox('setValue',"");
+                //var itemOptSearch = $('#carOptSearch').combobox('getValue');
+                var itemInpSearch = $('#carInpSearch').val();
+                $('#customerDlg').datagrid({ url:'getCustomCarByKey?carInpSearch='+itemInpSearch});        
+            }
+            function submitCustomerForm()
+            {
+                $.ajax({
+                       url:"__APP__/Shop4S/Users/getCurrentLoginInfo",
+                       type:"post",
+                       success:function(msg)
+                       {         
+                            $row = $('#customerDlg').datagrid('getChecked');
+                            if(($row[0].stcm_shopid!=msg)&&(msg!=0))
+                            {
+                                alert("您无权修改本车信息！");
+                            }else{
+                                //alert(global_current_shopid);
+                                //console.info($row);
+                                $('#editcustomerf').form('submit', {    
+                                    url:'editCustomer?stcm_carid='+$row[0].stcm_carid,    
+                                    onSubmit: function(param){ 
+                                        console.info($(this).data);
+                                        //exit;
+                                        //param.stcm_client_provicex = $("#editcustomerd").find('#stcm_client_provice').find("option:selected").text();
+                                        
+                                        //$("#editcustomerf").find('#stcm_client_provice').val("ssssss");
+                                        return $(this).form('validate'); 
+                                    },    
+                                    success:function(data){    
+                                        alert(data);
+                                        if(data=="修改成功！")
+                                        {
+                                            $('#editcustomerd').dialog('close');
+                                            $('#customerDlg').datagrid({
+                                                url:'getCarDb'
+                                            });
+                                        }
+                                    }    
+                                });   
+                            }
+                        }
+                });
+            }
+            function clearCustomerForm()
+            {
+                $('#editcustomerd').dialog('close');
+            }
+           
+        </script>
+    </head>
+    <body>
+    	<div style="margin:0px 0;"></div>
+	<table  id="customerDlg" class="easyui-datagrid" title="" style="width:100%;height:auto;" fit="true" fitColumns="true" border="0"
+			data-options="rownumbers:true,singleSelect:true,
+                        nowrap:false,
+                        pagination:true,
+                        pageSize: 25,
+                        pageList: [15,20,25,30],
+                        url:'getCarDb',
+                        method:'get',
+                        toolbar:'#tb',
+                        footer:'#ft'">
+		<thead>
+                    <tr>
+                        <th data-options="field:'ck',checkbox:true "></th>
+                        <th data-options="field:'stcm_car_owner',width:200">车主姓名</th>
+                        <th data-options="field:'stcm_car_license',width:100">车牌号码</th>
+                        <th data-options="field:'stcm_car_vin',align:'left',width:140">VIN</th>
+                        <th data-options="field:'stcm_car_xinghao',align:'center',width:100">品牌名称</th>  
+                        <th data-options="field:'stcm_client_cellphone',width:100">联系电话</th><!--入库，出库 -->
+                        <th data-options="field:'stcm_client_state',align:'center',width:100">客户状态</th>
+                        <th data-options="field:'stcm_car_mileage',align:'center',width:100">行驶里程</th>
+                        <th data-options="field:'stcm_car_color',align:'center',width:100">车身颜色</th>
+                        <th data-options="field:'stcm_car_chexi',align:'center',width:100">车系</th>
+                        <th data-options="field:'stcm_car_state',align:'center',width:100">车辆状态</th>
+                    </tr>
+		</thead>
+	</table>
+	<div id="tb" style="padding:2px 5px;">
+           关键字：<input id="carInpSearch" class="easyui-textbox" style="width:120px"></input>
+           <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="getSearchData()">查找</a>
+           &nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
+           &nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
+           <a href="#" class="easyui-linkbutton" iconCls="icon-add" onclick="newCustomer()">新建车辆</a>           
+           &nbsp; &nbsp;
+           <a href="#" class="easyui-linkbutton" iconCls="icon-edit" onclick="editCustomer()">车辆编辑</a>
+            &nbsp; &nbsp;
+            <a href="#" class="easyui-linkbutton" iconCls="icon-remove" onclick="delCustomer()">车辆删除</a>
+	</div>
+        <div id="newcustomerd" class="easyui-dialog" title="新建客户车辆"   style="width:780px;height:380px;">
+            <form id="newcustomerf"  name="newcustomerf" method="post">
+	    	<!--<table cellpadding="5">-->
+                <table   cellpadding="0" >
+                    <!--车主信息--->
+                    <tr>
+                        <td>车主姓名</td>
+                        <td><input class="easyui-textbox"  id="stcm_car_owner" name="stcm_car_owner" data-options="required:true" style="width:130px" /></td>   
+                        <td>客户性别</td>
+                        <td>
+                            <select class="easyui-combobox" id="stcm_client_sex" name="stcm_client_sex" data-options="editable:false,panelHeight:'auto'" style="width:130px">   
+                                <option value="男">男</option>  
+                                <option value="女">女</option> 
+                            </select> 
+                        </td>       
+                        <td>证件类型</td>
+                        <td>
+                            <select class="easyui-combobox" id="stcm_client_zjtype" name="stcm_client_zjtype" data-options="editable:false,panelHeight:'auto'" style="width:130px">   
+                                <option value="身份证">身份证</option>  
+                            </select> 
+                        </td>  
+                        <td>证件号码</td>
+                        <td><input class="easyui-textbox"  id="stcm_client_id" name="stcm_client_id" data-options="required:false, prompt:'请输入正确的身份证号。',validType:'cardId'"   style="width:130px"/> 
+                    </tr>
+                    <tr>                        
+                        <td>车主手机</td>
+                        <td><input class="easyui-textbox"  id="stcm_client_cellphone" name="stcm_client_cellphone"  type="text" data-options=""  style="width:130px"/> 
+                        <td>固定电话</td>
+                        <td><input class="easyui-textbox"  id="stcm_client_tel" name="stcm_client_tel"  type="text"  data-options="required:false,prompt:'请输入正确的电话号码。',validType:'telNum'"  style="width:130px"/>                       
+                        <td>车主分类</td>
+                        <td>
+                            <select class="easyui-combobox" id="stcm_client_type" name="stcm_client_type" data-options="required:true,editable:false,panelHeight:'auto'"   style="width:130px">  
+                                <option value="个人">个人</option>  
+                                <option value="单位">单位</option>  
+                            </select> 
+                        </td>  
+                        <td>车主类别</td>
+                        <td>
+                            <select class="easyui-combobox" id="stcm_client_class" name="stcm_client_class" data-options="required:true,editable:false,panelHeight:'auto'"   style="width:130px">  
+                                <option value="重要客户-A类">重要客户-A类</option>  
+                                <option value="重要客户-B类">重要客户-B类</option>  
+                                <option value="重要客户-C类">重要客户-C类</option>  
+                                <option value="重要客户-D类">重要客户-D类</option>                                  
+                            </select> 
+                        </td>    
+                    </tr>
+                    <tr>    
+                        <td>所在省份</td>
+                        <td>
+                            <select class="" id="stcm_client_provice" name="stcm_client_provice" data-options="editable:false,panelHeight:'auto'"   style="width:130px"> 
+                                <option value="0">--请选择省份--</option>
+                            </select> 
+                        </td>  
+                        <td>所在城市</td>
+                        <td>
+                            <select class="" id="stcm_client_city" name="stcm_client_city" data-options="editable:false,panelHeight:'auto'"   style="width:130px"> 
+                                <option value="0">--请选择城市--</option>  
+                            </select> 
+                        </td>                          
+                        <td>所在区县</td>
+                        <td>
+                            <select class="" id="stcm_client_county" name="stcm_client_county" data-options="editable:false,panelHeight:'auto'"  style="width:130px">  
+                               <option value="0">--请选择区县--</option>
+                            </select> 
+                        </td>    
+                        <td>详细地址</td>
+                        <td><input class="easyui-textbox"  id="stcm_client_addr" name="stcm_client_addr"  type="text" data-options="required:false"  style="width:130px"> 
+                    </tr>
+                    <tr>    
+                        <td>驾驶证到期日</td>
+                        <td><input class="easyui-datebox"  id="stcm_drivelicence_expiration" name="stcm_drivelicence_expiration"    style="width:130px"> 
+
+                        <td>联系人</td>
+                        <td><input class="easyui-textbox"  id="stcm_contact_person" name="stcm_contact_person" data-options="required:true" style="width:130px" /></td>   
+                        <td>联系手机</td>
+                        <td><input class="easyui-textbox"  id="stcm_contact_cellphone" name="stcm_contact_cellphone"   data-options="required:true,prompt:'请输入正确的手机号码。',validType:'phoneNum'"  style="width:130px"/> 
+                    </tr>
+                </table>    
+                    <!----车辆信息---->
+                <div id="fgf" style="padding:8px 8px">
+                    <hr style="height:1px;border:1px solid #B0E0E6 ;" />
+                </div>
+                <table   cellpadding="0" >
+                    <tr>
+                        <td>车牌号</td>
+                        <td><input class="easyui-textbox"  id="stcm_car_license" name="stcm_car_license"  data-options="required:true"  style="width:125px" /></td>
+                        <td>VIN</td>
+                        <td><input class="easyui-textbox"  id="stcm_car_vin" name="stcm_car_vin"  type="text"  data-options="required:true,prompt:'请输入正确的VIN编码',validType:'vinCheck'"  style="width:130px" /></td>
+                        <td>电机号</td>
+                        <td><input class="easyui-textbox"  id="stcm_car_dianjicode" name="stcm_car_dianjicode"  data-options="required:true"  style="width:125px"  /></td>
+                        
+                        <td>电池包编号</td>
+                        <td><input class="easyui-textbox"  id="stcm_batery_code" name="stcm_batery_code"  data-options="required:true"  style="width:125px" /></td>
+                    </tr>
+                    <tr>                         
+                        <td>车系代码</td>
+                        <td><input class="easyui-textbox"  id="stcm_car_chexi" name="stcm_car_chexi" data-options="required:true"  style="width:125px"/></td>
+                        <td>车型</td>
+                        <td><input class="easyui-textbox"  id="stcm_car_xinghao" name="stcm_car_xinghao"  data-options="required:true"    style="width:130px" /></td>                      
+                        <td>车身颜色</td>
+                        <td><input class="easyui-textbox"  id="stcm_car_color" name="stcm_car_color"  data-options="required:true"    style="width:125px" /></td>
+                        <td>电池生产商</td>
+                        <td><input class="easyui-textbox"  id="stcm_batery_producer" name="stcm_batery_producer"  data-options=""  style="width:125px" /></td>
+                    </tr>
+                    <tr>   
+                        <td>车辆类别</td>
+                        <td>
+                            <select class="easyui-combobox" id="stcm_car_class" name="stcm_car_class" data-options="panelHeight:'auto'"  style="width:125px">   
+                                <option value="私家车">私家车</option>  
+                                <option value="出租车">出租车</option>  
+                            </select>                             
+                        </td>
+                    
+                        <td>车辆状态</td>
+                        <td>
+                            <select class="easyui-combobox" id="stcm_car_state" name="stcm_car_state" data-options="panelHeight:'auto'"  style="width:130px">   
+                                <option value="已分配">已分配</option>  
+                            </select> 
+                        </td>                   
+                        <td>生产日期</td>
+                        <td><input class="easyui-datebox"  id="stcm_carproduce_date" name="stcm_carproduce_date"  data-options=""  style="width:125px"  /></td>
+                        <td>开票日期</td>
+                        <td><input class="easyui-datebox"  id="stcm_carkaipiao_date" name="stcm_carkaipiao_date"  data-options=""   style="width:125px"  /></td>
+                    </tr>
+                    <tr>                           
+                        <td>保修开始日期</td>
+                        <!---editable:false--->
+                        <td><input class="easyui-datebox"  id="stcm_carbaoxiustart_date" name="stcm_carbaoxiustart_date"  type="text" data-options="" style="width:125px"  /></td>                      
+                        <td>销售日期</td>
+                        <td><input class="easyui-datebox"  id="stcm_carsale_date" name="stcm_carsale_date"  type="text" data-options=""  style="width:130px"  /></td>
+                        <td>首保日期</td>
+                        <td><input class="easyui-datebox"  id="stcm_carfirstmaintain_date" name="stcm_carfirstmaintain_date"  type="text"   style="width:125px"  data-options="disabled:true"   /></td>      
+                    </tr>
+                </table>    
+                <!--售后信息-->
+                <div id="fgf" style="padding:8px 8px">
+                    <hr style="height:1px;border:1px solid #B0E0E6 ;" />
+                </div>
+                <table   cellpadding="0" >
+                    <tr>
+                        <td>最近进厂日期</td>
+                        <td><input class="easyui-datebox"  id="stcm_nearcome_date" name="stcm_nearcome_date"  type="text"  data-options="disabled:true"  style="width:115px;"  /></td>   
+                        <td>最近进厂里程</td>
+                        <td><input class="easyui-numberbox"  id="stcm_nearcome_mileage" name="stcm_nearcome_mileage"  type="text"  data-options="disabled:true"    style="width:115px;"  /></td> 
+                        <td>最近保养日期</td>
+                        <td><input class="easyui-datebox"  id="stcm_nearmaintain_date" name="stcm_nearmaintain_date"  type="text"  data-options="disabled:true"   style="width:115px;"  /></td>   
+                        <td>最近保养里程</td>
+                        <td><input class="easyui-numberbox"  id="stcm_nearmaintain_mileage" name="stcm_nearmaintain_mileage"  type="text"  data-options="disabled:true"   style="width:110px;"  /></td>                          
+                    <tr>
+                    </tr>    
+                        <td>最近索赔日期</td>
+                        <td><input class="easyui-datebox"  id="stcm_nearcps_date" name="stcm_nearcps_date"  type="text"  data-options="disabled:true"   style="width:115px;"  /></td>   
+                        <td>最近索赔里程</td>
+                        <td><input class="easyui-numberbox"  id="stcm_nearcps_mileage" name="stcm_nearcps_mileage"  type="text"  data-options="disabled:true"   style="width:115px;"  /></td>                          
+                    </tr>      
+	    	</table>
+	    </form>
+            <div style="text-align:center;padding-left:500px">
+	    	<a href="javascript:void(0)" class="easyui-linkbutton c1" style="width:80px"  onclick="submitNewCustomerForm()">提交</a>
+	    	<a href="javascript:void(0)" class="easyui-linkbutton c3" style="width:80px"  onclick="clearNewCustomerForm()">关闭</a>
+	    </div>
+        </div> 
+        
+        <div id="editcustomerd" class="easyui-dialog" title="客户数据编辑"   style="width:780px;height:380px;">
+            <form id="editcustomerf" name="editcustomerf" method="post">
+	    	<!--<table cellpadding="5">-->
+                <table   cellpadding="0" >
+                    <!--车主信息--->
+                    <tr>
+                        <td>车主姓名</td>
+                        <td><input class="easyui-textbox"  id="stcm_car_owner" name="stcm_car_owner" style="width:130px" /></td>   
+                        <td>客户性别</td>
+                        <td>
+                            <select class="easyui-combobox" id="stcm_client_sex" name="stcm_client_sex" data-options="editable:false,panelHeight:'auto'" style="width:130px">   
+                                <option value="男">男</option>  
+                                <option value="女">女</option> 
+                            </select> 
+                        </td>       
+                        <td>证件类型</td>
+                        <td>
+                            <select class="easyui-combobox" id="stcm_client_zjtype" name="stcm_client_zjtype" data-options="editable:false,panelHeight:'auto'" style="width:130px">   
+                                <option value="身份证">身份证</option>  
+                            </select> 
+                        </td>  
+                        <td>证件号码</td>
+                        <td><input class="easyui-textbox"  id="stcm_client_id" name="stcm_client_id"    data-options="required:false, prompt:'请输入正确的身份证号。',validType:'cardId'"   style="width:130px"/> 
+                    </tr>
+                    <tr>                        
+                        <td>车主手机</td>
+                        <td><input class="easyui-textbox"  id="stcm_client_cellphone" name="stcm_client_cellphone"  type="text" data-options=""  style="width:130px"/> 
+                        <td>固定电话</td>
+                        <td><input class="easyui-textbox"  id="stcm_client_tel" name="stcm_client_tel"  type="text"  data-options="prompt:'请输入正确的电话号码。',validType:'telNum'"  style="width:130px"/>                       
+                        <td>车主分类</td>
+                        <td>
+                            <select class="easyui-combobox" id="stcm_client_type" name="stcm_client_type" data-options="editable:false,panelHeight:'auto'"   style="width:130px">  
+                                <option value="个人">个人</option>  
+                                <option value="单位">单位</option>  
+                            </select> 
+                        </td>  
+                        <td>车主类别</td>
+                        <td>
+                            <select class="easyui-combobox" id="stcm_client_class" name="stcm_client_class" data-options="required:true,editable:false,panelHeight:'auto'"   style="width:130px">  
+                                <option value="重要客户-A类">重要客户-A类</option>  
+                                <option value="重要客户-B类">重要客户-B类</option>  
+                                <option value="重要客户-C类">重要客户-C类</option>  
+                                <option value="重要客户-D类">重要客户-D类</option>                                  
+                            </select> 
+                        </td>                           
+                    </tr>
+                    <tr>          
+                        <td>所在省份</td>
+                        <td>
+                            <select class=""  id="stcm_client_provice" name="stcm_client_provice" data-options="editable:false,panelHeight:'auto'"   style="width:130px"> 
+                                <option value="0">--请选择省份--</option>
+                            </select> 
+                        </td>  
+ 
+                        <td>所在城市</td>
+                        <td>
+                            <select class="" id="stcm_client_city" name="stcm_client_city" data-options="editable:false,panelHeight:'auto'"   style="width:130px"> 
+                                <option value="0">--请选择城市--</option>
+                            </select> 
+                        </td>                          
+
+                        <td>所在区县</td>
+                        <td>
+                            <select class="" id="stcm_client_county" name="stcm_client_county" data-options="editable:false,panelHeight:'auto'"  style="width:130px">  
+                                    <option value="0">--请选择区县--</option>
+                            </select> 
+                        </td>    
+                        <td>详细地址</td>
+                        <td><input class="easyui-textbox"  id="stcm_client_addr" name="stcm_client_addr"  type="text"   style="width:130px"> 
+                    </tr>
+                    <tr>                            
+                        <td>驾驶证到期日</td>
+                        <td><input class="easyui-datebox"  id="stcm_drivelicence_expiration" name="stcm_drivelicence_expiration"    style="width:130px"> 
+
+                        <td>联系人</td>
+                        <td><input class="easyui-textbox"  id="stcm_contact_person" name="stcm_contact_person" data-options="required:true" style="width:130px" /></td>   
+                        <td>联系手机</td>
+                        <td><input class="easyui-textbox"  id="stcm_contact_cellphone" name="stcm_contact_cellphone"   data-options="required:true,prompt:'请输入正确的手机号码。',validType:'phoneNum'"  style="width:130px"/> 
+                    </tr>  
+                </table>    
+                    <!----车辆信息---->
+                <div id="fgf" style="padding:8px 8px">
+                    <hr style="height:1px;border:1px solid #B0E0E6 ;" />
+                </div>
+                <table   cellpadding="0" >
+                    <tr>
+                        <td>车牌号</td>
+                        <td><input class="easyui-textbox"  id="stcm_car_license" name="stcm_car_license"  data-options="required:true"  style="width:125px" /></td>
+                        <td>VIN</td>
+                        <td><input class="easyui-textbox"  id="stcm_car_vin" name="stcm_car_vin"  type="text"  data-options="required:true,prompt:'请输入正确的VIN编码',validType:'vinCheck'"  style="width:130px" /></td>
+                        <td>电机号</td>
+                        <td><input class="easyui-textbox"  id="stcm_car_dianjicode" name="stcm_car_dianjicode"  data-options="required:true"  style="width:125px"  /></td>
+                        
+                        <td>电池包编号</td>
+                        <td><input class="easyui-textbox"  id="stcm_batery_code" name="stcm_batery_code"  data-options="required:true"  style="width:125px" /></td>
+                    </tr>
+                    <tr>                         
+                        <td>车系代码</td>
+                        <td><input class="easyui-textbox"  id="stcm_car_chexi" name="stcm_car_chexi" data-options="required:true"  style="width:125px"/></td>
+                        <td>车型</td>
+                        <td><input class="easyui-textbox"  id="stcm_car_xinghao" name="stcm_car_xinghao"  data-options="required:true"    style="width:130px" /></td>                      
+                        <td>车身颜色</td>
+                        <td><input class="easyui-textbox"  id="stcm_car_color" name="stcm_car_color"  data-options="required:true"    style="width:125px" /></td>
+                        <td>电池生产商</td>
+                        <td><input class="easyui-textbox"  id="stcm_batery_producer" name="stcm_batery_producer"  data-options=""  style="width:125px" /></td>
+                    </tr>
+                    <tr>   
+                        <td>车辆类别</td>
+                        <td>
+                            <select class="easyui-combobox" id="stcm_car_class" name="stcm_car_class" data-options="panelHeight:'auto'"  style="width:125px">   
+                                <option value="私家车">私家车</option>  
+                                <option value="出租车">出租车</option>  
+                            </select>                             
+                        </td>
+                    
+                        <td>车辆状态</td>
+                        <td>
+                            <select class="easyui-combobox" id="stcm_car_state" name="stcm_car_state" data-options="panelHeight:'auto'"  style="width:130px">   
+                                <option value="已分配">已分配</option>  
+                            </select> 
+                        </td>                   
+                        <td>生产日期</td>
+                        <td><input class="easyui-datebox"  id="stcm_carproduce_date" name="stcm_carproduce_date"  data-options=""  style="width:125px"  /></td>
+                        <td>开票日期</td>
+                        <td><input class="easyui-datebox"  id="stcm_carkaipiao_date" name="stcm_carkaipiao_date"  data-options=""   style="width:125px"  /></td>
+                    </tr>
+                    <tr>                           
+                        <td>保修开始日期</td>
+                        <!---editable:false--->
+                        <td><input class="easyui-datebox"  id="stcm_carbaoxiustart_date" name="stcm_carbaoxiustart_date"  type="text" data-options="" style="width:125px"  /></td>                      
+                        <td>销售日期</td>
+                        <td><input class="easyui-datebox"  id="stcm_carsale_date" name="stcm_carsale_date"  type="text" data-options=""  style="width:130px"  /></td>
+                        <td>首保日期</td>
+                        <td><input class="easyui-datebox"  id="stcm_carfirstmaintain_date" name="stcm_carfirstmaintain_date"  type="text" data-options=""  style="width:125px"   /></td>      
+                    </tr>
+                </table>    
+                    <!--售后信息-->
+                <div id="fgf" style="padding:8px 8px">
+                    <hr style="height:1px;border:1px solid #B0E0E6 ;" />
+                </div>
+                <table   cellpadding="0" >
+                    <tr>
+                        <td>最近进厂日期</td>
+                        <td><input class="easyui-datebox"  id="stcm_nearcome_date" name="stcm_nearcome_date"  type="text"  data-options="disabled:true"  style="width:115px;"  /></td>   
+                        <td>最近进厂里程</td>
+                        <td><input class="easyui-numberbox"  id="stcm_nearcome_mileage" name="stcm_nearcome_mileage"  type="text"  data-options="disabled:true"    style="width:115px;"  /></td> 
+                        <td>最近保养日期</td>
+                        <td><input class="easyui-datebox"  id="stcm_nearmaintain_date" name="stcm_nearmaintain_date"  type="text"  data-options="disabled:true"   style="width:115px;"  /></td>   
+                        <td>最近保养里程</td>
+                        <td><input class="easyui-numberbox"  id="stcm_nearmaintain_mileage" name="stcm_nearmaintain_mileage"  type="text"  data-options="disabled:true"   style="width:115px;"  /></td>                          
+                    <tr>
+                    </tr>    
+                        <td>最近索赔日期</td>
+                        <td><input class="easyui-datebox"  id="stcm_nearcps_date" name="stcm_nearcps_date"  type="text"  data-options="disabled:true"   style="width:115px;"  /></td>   
+                        <td>最近索赔里程</td>
+                        <td><input class="easyui-numberbox"  id="stcm_nearcps_mileage" name="stcm_nearcps_mileage"  type="text"  data-options="disabled:true"   style="width:115px;"  /></td>                          
+                    </tr>      
+	    	</table>
+	    </form>
+            <div style="text-align:center;padding-left:500px">
+	    	<a href="javascript:void(0)" class="easyui-linkbutton c1" style="width:80px"  onclick="submitCustomerForm()">提交</a>
+	    	<a href="javascript:void(0)" class="easyui-linkbutton c3" style="width:80px"  onclick="clearCustomerForm()">关闭</a>
+	    </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,31 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+<TITLE> New Document </TITLE>
+　　<meta http-equiv="content-type" content="text/html;charset=UTF-8">
+<meta name="title" content="Samples" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+
+</HEAD>
+<BODY>
+	<form>
+		<input id="localpic1" type="file" style="display:none">
+		<div id="showpic1" onclick="document.getElementById('localpic1').click();" data="点击添加海报">点击添加海报</div>
+	</form>
+	
+	<li>
+		 <font>海报</font>
+		 <div class="pic" id="showpic1" onclick="document.getElementById('localpic1').click();" data="点击添加海报">
+			  点击添加海报
+		 </div>
+		 <div id="showpic1Name"></div>
+		 <div id="showpic1Size"></div>
+		 <div class="info">
+			<a id="showpic1Up" style="display:none" href="#" onclick="uploadFile('pic1')">上传</a>
+			<a id="showpic1Me" style="display:none" href="#">上传中</a>
+			<a id="showpic1De" href="#" style="display:none" onclick="deletePic('pic1')">删除</a>
+		 </div>
+  </li>	
+</BODY>
+</HTML>
